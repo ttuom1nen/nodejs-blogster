@@ -4,12 +4,14 @@ const util = require("util");
 
 const redisUrl = "redis://127.0.0.1:6379";
 const redisClient = redis.createClient(redisUrl);
-redisClient.get = util.promisify(redisClient.get);
+redisClient.hget = util.promisify(redisClient.hget);
 
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.prototype.cache = function () {
+mongoose.Query.prototype.cache = function (options = {}) {
   this.useCache = true;
+  this.hashKey = JSON.stringify(options.key || "");
+
   return this;
 };
 
@@ -25,7 +27,7 @@ mongoose.Query.prototype.exec = async function () {
   );
 
   // See if we have a value for "key" in redis
-  const cacheValue = await redisClient.get(key);
+  const cacheValue = await redisClient.hget(this.hashKey, key);
 
   // If we do, return it
   if (cacheValue) {
@@ -41,7 +43,14 @@ mongoose.Query.prototype.exec = async function () {
   console.log("Cache miss");
   const result = await exec.apply(this, arguments);
 
-  redisClient.set(key, JSON.stringify(result));
+  redisClient.hset(this.hashKey, key, JSON.stringify(result));
+  redisClient.expire(this.hashKey, 10);
 
   return result;
+};
+
+module.exports = {
+  clearHash(hashKey) {
+    redisClient.del(JSON.stringify(hashKey));
+  },
 };
