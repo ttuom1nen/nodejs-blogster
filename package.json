@@ -3,6 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "jest": {
+    "setupTestFrameworkScriptFile": "./tests/setup.js",
+    "verbose": true,
+    "testURL": "http://localhost:3000"
+  },
   "scripts": {
     "start": "node index.js",
     "server": "nodemon index.js --ignore tests",
@@ -11,10 +16,6 @@
     "build": "NPM_CONFIG_PRODUCTION=false npm install --prefix client && npm run build --prefix client",
     "heroku-postbuild": "npm run build",
     "test": "jest"
-  },
-  "jest": {
-    "verbose": true,
-    "testURL": "http://localhost:3000"
   },
   "author": "",
   "license": "ISC",
