@@ -6,6 +6,7 @@ class CustomPage {
   static async build() {
     const browser = await puppeteer.launch({
       headless: false,
+      // args: ["--no-sandbox"],
     });
 
     const page = await browser.newPage();
@@ -49,7 +50,7 @@ class CustomPage {
   }
 
   post(path, data) {
-    this.page.evaluate(
+    return this.page.evaluate(
       (_path, _data) => {
         return fetch(_path, {
           method: "POST",
@@ -62,6 +63,14 @@ class CustomPage {
       },
       path,
       data
+    );
+  }
+
+  execRequests(actions) {
+    return Promise.all(
+      actions.map(({ method, path, data }) => {
+        return this[method](path, data);
+      })
     );
   }
 }
